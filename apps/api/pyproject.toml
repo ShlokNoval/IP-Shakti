@@ -1,0 +1,9 @@
+[project]
+name = "ip-shakti-api"
+version = "0.1.0"
+description = "AI backend for IP-SHAKTI — IP & regulatory guidance for Ayurveda"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

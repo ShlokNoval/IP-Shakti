@@ -1,0 +1,25 @@
+# Core
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+pydantic==2.9.0
+python-dotenv==1.0.1
+
+# AI / LLM
+langchain==0.3.0
+langchain-google-genai==2.0.0
+langgraph==0.2.0
+google-generativeai==0.8.0
+
+# Database
+supabase==2.9.0
+neo4j==5.25.0
+
+# RAG
+langchain-community==0.3.0
+
+# HTTP
+httpx==0.27.0
+aiohttp==3.10.0
+
+# Utils
+python-multipart==0.0.9

@@ -1,0 +1,39 @@
+{
+  "_description": "Seed data for statutes in the knowledge graph. Version-controlled.",
+  "_format": "Each entry becomes a node in Neo4j.",
+  "statutes": [
+    {
+      "name": "The Patents Act, 1970",
+      "year": 1970,
+      "jurisdiction": "India",
+      "last_amended": "2024",
+      "key_sections_for_ayurveda": ["3(d)", "3(e)", "3(f)", "3(p)", "25", "64"]
+    },
+    {
+      "name": "The Drugs and Cosmetics Act, 1940",
+      "year": 1940,
+      "jurisdiction": "India",
+      "last_amended": "2024",
+      "key_sections_for_ayurveda": ["Schedule I", "Rule 33A", "Rule 122E", "Chapter III-A"]
+    },
+    {
+      "name": "The Biological Diversity Act, 2002",
+      "year": 2002,
+      "jurisdiction": "India",
+      "last_amended": "2023",
+      "key_sections_for_ayurveda": ["3", "6", "7", "19", "21"]
+    },
+    {
+      "name": "The Protection of Plant Varieties and Farmers' Rights Act, 2001",
+      "year": 2001,
+      "jurisdiction": "India",
+      "key_sections_for_ayurveda": ["14", "15", "16", "39"]
+    },
+    {
+      "name": "The Geographical Indications of Goods Act, 1999",
+      "year": 1999,
+      "jurisdiction": "India",
+      "key_sections_for_ayurveda": ["1", "2", "11"]
+    }
+  ]
+}
