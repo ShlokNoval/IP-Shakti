@@ -24,7 +24,11 @@ app.add_middleware(
 )
 
 
+from .api.routes import chat
+
 @app.get("/api/v1/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "ip-shakti-api"}
+
+app.include_router(chat.router, prefix="/api/v1", tags=["chat"])

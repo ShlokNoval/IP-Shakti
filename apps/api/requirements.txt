@@ -6,9 +6,10 @@ python-dotenv==1.0.1
 
 # AI / LLM
 langchain==0.3.0
-langchain-google-genai==2.0.0
-langgraph==0.2.0
-google-generativeai==0.8.0
+langchain-google-vertexai==2.0.0
+langgraph==0.2.27
+google-cloud-aiplatform==1.67.0
+pydantic-settings==2.5.2
 
 # Database
 supabase==2.9.0
