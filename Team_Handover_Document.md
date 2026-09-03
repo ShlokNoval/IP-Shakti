@@ -30,7 +30,7 @@ To ensure no merge conflicts, the project is divided into 4 isolated modules. Al
 - Final synthesis and Confidence Scoring.
 **Boundaries:** Shlok orchestrates the agents, but does not write the internal logic for the Domain or Compliance agents.
 
-### 💻 Module 2: Frontend & Multilingual UI (Assigned to: Subordinate 1)
+### 💻 Module 2: Frontend & Multilingual UI (Assigned to:  Siddhi Basarkar - Subordinate 1)
 **Role:** The User Experience.
 **Responsibilities:**
 - Next.js 15 UI development (`apps/web/*`).
@@ -39,7 +39,7 @@ To ensure no merge conflicts, the project is divided into 4 isolated modules. Al
 - Integrating the Bhashini API for Hindi voice/text translation.
 **Boundaries:** 100% isolated to `apps/web/`. You do not need the backend to be finished to start; mock the backend API responses using the JSON contracts below.
 
-### 🌿 Module 3: Domain Agents (Assigned to: Subordinate 2)
+### 🌿 Module 3: Domain Agents (Assigned to: Swarali Baheti - Subordinate 2)
 **Role:** The Legal Specialists.
 **Responsibilities:**
 - Writing the specific system prompts, few-shot examples, and logic for the 5 domain agents.
@@ -52,7 +52,7 @@ To ensure no merge conflicts, the project is divided into 4 isolated modules. Al
   - `ayurveda_aahar_agent.py`
 **Boundaries:** You assume that when your agent is called, it will be handed a `query` and `retrieved_legal_context`. Your ONLY job is to make the Gemini 2.0 Flash model reason over that context and output the correct JSON schema. You do not worry about how the context is retrieved or how the agent is routed.
 
-### ⚖️ Module 4: Compliance Engines & Data Pipelines (Assigned to: Subordinate 3)
+### ⚖️ Module 4: Compliance Engines & Data Pipelines (Assigned to: Khushboo (Subordinate 3))
 **Role:** The Rule Enforcers & Data Loaders.
 **Responsibilities:**
 - Writing the deterministic compliance rules (using Gemini + hardcoded logic).
