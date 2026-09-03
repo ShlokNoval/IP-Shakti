@@ -9,7 +9,7 @@
 - **Core Concept:** It is a Multi-Agent system (10 agents), NOT a single chatbot. It classifies the product first, routes it to domain specialists, runs compliance checks (Section 3 Patentability, ABS Biodiversity), and outputs a structured, cited response.
 
 ## 2. Git & Branching Strategy
-- **Base Branch:** All team members will branch off `shlok` (NOT `main`).
+- **Base Branch:** All team members will clone `shlok` branch, and start working and pushing working code on their branch (NOT `main`), also refer docs and this doc for more contexts.
 - **Your Branch:** Create a branch for your specific module (e.g., `frontend-dev`, `domain-agents-dev`, `compliance-dev`).
 - **Merging:** You will push your code to your branch. Shlok (Lead) will review and merge your branch into the `shlok` branch.
 - **Rules:** DO NOT touch files outside your assigned module. If you need a change in a shared file (like a Pydantic schema), communicate with Shlok.
