@@ -5,11 +5,18 @@ Reads the processed JSONL chunks, generates vector embeddings using Google Verte
 and uploads both the embeddings and the strict JSON metadata to Supabase (pgvector).
 """
 import os
+import sys
 import json
 from pathlib import Path
 from typing import List, Dict, Any
+
+# Add the 'src' directory to the Python path to resolve imports when running as a script
+project_root = Path(__file__).parent.parent.parent.parent.parent
+api_root = project_root / "apps" / "api"
+sys.path.append(str(api_root))
+
 from langchain_google_vertexai import VertexAIEmbeddings
-from ...config.settings import settings
+from src.config.settings import settings
 
 class VectorUploader:
     def __init__(self):

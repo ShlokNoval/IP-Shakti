@@ -7,6 +7,7 @@ required for accurate, authenticated retrieval.
 """
 import os
 import json
+import fitz # PyMuPDF
 from pathlib import Path
 from typing import List, Dict, Any
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -24,7 +25,7 @@ class DocumentChunker:
     def _determine_metadata(self, filepath: Path) -> Dict[str, Any]:
         """
         Derives the strict JSON metadata schema based on the folder structure.
-        Structure expected: IP Shakti Sources / [Jurisdiction] / [Category] / file.txt
+        Structure expected: IP Shakti Sources / [Jurisdiction] / [Category] / file.ext
         """
         parts = filepath.parts
         
@@ -48,17 +49,35 @@ class DocumentChunker:
 
         return metadata
 
-    def process_directory(self) -> List[Dict[str, Any]]:
-        """Processes all text files in the sources directory."""
-        all_chunks = []
-        
-        # For MVP, we look for .txt files. (PDFs would require PyMuPDF or similar first).
-        for filepath in self.sources_dir.rglob("*.txt"):
-            try:
+    def _extract_text(self, filepath: Path) -> str:
+        """Extracts text from a file based on its extension."""
+        ext = filepath.suffix.lower()
+        content = ""
+        try:
+            if ext == '.txt':
                 with open(filepath, 'r', encoding='utf-8') as f:
                     content = f.read()
-            except Exception as e:
-                print(f"Error reading {filepath}: {e}")
+            elif ext == '.pdf':
+                doc = fitz.open(filepath)
+                for page in doc:
+                    content += page.get_text() + "\n"
+                doc.close()
+            else:
+                print(f"Skipping unsupported file type: {filepath}")
+        except Exception as e:
+            print(f"Error reading {filepath}: {e}")
+        return content
+
+    def process_directory(self) -> List[Dict[str, Any]]:
+        """Processes all text and pdf files in the sources directory."""
+        all_chunks = []
+        
+        # Look for both txt and pdf files
+        files = list(self.sources_dir.rglob("*.txt")) + list(self.sources_dir.rglob("*.pdf"))
+        
+        for filepath in files:
+            content = self._extract_text(filepath)
+            if not content.strip():
                 continue
 
             metadata = self._determine_metadata(filepath)
