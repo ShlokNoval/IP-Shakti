@@ -1,17 +1,16 @@
 """
 ABS Compliance Agent — Checks for Access and Benefit Sharing obligations.
 """
-from langchain_google_vertexai import ChatVertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from ...models.chat import EngineOutput
 from ...config.settings import settings
 
 class ABSComplianceEngine:
     def __init__(self):
-        self.llm = ChatVertexAI(
-            model_name="gemini-2.5-flash", 
-            project=settings.google_cloud_project,
-            location=settings.google_cloud_location,
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", 
+            google_api_key=settings.google_api_key,
             temperature=0.1
         )
         self.structured_llm = self.llm.with_structured_output(EngineOutput)

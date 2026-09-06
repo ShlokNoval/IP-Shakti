@@ -5,7 +5,7 @@ Uses Gemini Flash-Lite with few-shot prompting to classify an Ayurvedic product
 into one of 6 regulatory categories. Returns category + confidence + reasoning.
 """
 
-from langchain_google_vertexai import ChatVertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from ...models.chat import ClassifierOutput
 from ...config.settings import settings
@@ -14,10 +14,9 @@ class ClassifierAgent:
     def __init__(self):
         # We use gemini-2.5-flash since gemini-2.0-flash-lite might not be available everywhere
         # For SIH we assume a fast flash model. 
-        self.llm = ChatVertexAI(
-            model_name="gemini-2.5-flash", 
-            project=settings.google_cloud_project,
-            location=settings.google_cloud_location,
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", 
+            google_api_key=settings.google_api_key,
             temperature=0.0
         )
         # Force the output to match our Pydantic schema

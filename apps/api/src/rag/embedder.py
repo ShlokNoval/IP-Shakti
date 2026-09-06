@@ -15,16 +15,15 @@ project_root = Path(__file__).parent.parent.parent.parent.parent
 api_root = project_root / "apps" / "api"
 sys.path.append(str(api_root))
 
-from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from src.config.settings import settings
 
 class VectorUploader:
     def __init__(self):
         # We use text-embedding-004 which is the latest Google embedding model, excellent for semantic search
-        self.embeddings = VertexAIEmbeddings(
-            model_name="text-embedding-004",
-            project=settings.google_cloud_project,
-            location=settings.google_cloud_location
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/text-embedding-004",
+            google_api_key=settings.google_api_key
         )
         
         # TODO: Initialize Supabase client here once credentials are set

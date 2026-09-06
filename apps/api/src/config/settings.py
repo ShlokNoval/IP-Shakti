@@ -7,9 +7,8 @@ class Settings(BaseSettings):
     """Central configuration for all external services."""
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', extra='ignore')
 
-    # Google Cloud Vertex AI
-    google_cloud_project: str = ""
-    google_cloud_location: str = "us-central1"
+    # Google GenAI (Free Tier)
+    google_api_key: str = ""
 
     # Supabase
     supabase_url: str = ""
