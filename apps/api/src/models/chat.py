@@ -40,6 +40,10 @@ class DomainAgentOutput(BaseModel):
     ip_options: List[str] = Field(description="List of available IP protections")
     citations: List[SourceCitation] = Field(description="List of sources cited in the analysis")
 
+class EngineOutput(BaseModel):
+    engine: str = Field(description="Name of the compliance engine")
+    checks: List[ComplianceAlert] = Field(description="List of compliance checks performed")
+
 class FinalResponse(BaseModel):
     classification: str = Field(description="The final classification category")
     jurisdiction: str = Field(description="The jurisdiction analyzed")

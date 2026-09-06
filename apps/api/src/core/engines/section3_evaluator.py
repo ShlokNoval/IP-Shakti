@@ -1,19 +1,35 @@
 """
-Agent 8: Section 3 Patentability Evaluator
-
-Checks whether a product/process passes the patentability bars under
-Section 3 of the Indian Patents Act, 1970.
-
-Sub-section checks:
-  § 3(d) — Known substance (does modified process add novelty?)
-  § 3(e) — Mere admixture (is there synergistic effect?)
-  § 3(f) — Mere arrangement of known devices
-  § 3(p) — Traditional knowledge (TKDL cross-check)
-
-Output per sub-section: CLEAR ✅ / REVIEW ⚠️ / BLOCKED ❌ with reasoning.
-
-Called when: Orchestrator detects a patent-related query.
-Model: Gemini 2.0 Flash + deterministic rule checks
+Section 3 Evaluator — Checks against Indian Patents Act Section 3 exclusions.
 """
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.prompts import ChatPromptTemplate
+from ...models.chat import EngineOutput
+from ...config.settings import settings
 
-# TODO: Implement with sub-section analysis + structured output
+class Section3Evaluator:
+    def __init__(self):
+        self.llm = ChatVertexAI(
+            model_name="gemini-2.5-flash", 
+            project=settings.google_cloud_project,
+            location=settings.google_cloud_location,
+            temperature=0.1
+        )
+        self.structured_llm = self.llm.with_structured_output(EngineOutput)
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are an expert Patent Examiner in India.
+Your job is to evaluate if a product violates Section 3 of the Patents Act, 1970.
+Evaluate specifically for:
+- 3(d): Is it just a new form of a known substance without enhanced efficacy?
+- 3(e): Is it a mere admixture resulting only in the aggregation of properties?
+- 3(p): Is it an invention which in effect is traditional knowledge?
+
+Return your engine name as "Section 3 Evaluator" and provide specific checks.
+"""),
+            ("human", "Query: {query}\n\nContext:\n{context}")
+        ])
+        self.chain = self.prompt | self.structured_llm
+
+    def evaluate(self, query: str, context: str) -> EngineOutput:
+        return self.chain.invoke({"query": query, "context": context})
+
+section3_evaluator = Section3Evaluator()
