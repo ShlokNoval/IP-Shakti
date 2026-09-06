@@ -1,19 +1,31 @@
 """
-Base Agent — Shared interface for all domain agents.
-
-All domain agents (Ayurvedic Medicine, Phytopharmaceutical, New Drug,
-Cosmetics, Ayurveda-Aahar) inherit from this base class.
-
-Each agent gets:
-  - Its own system prompt (from config/prompts/agents/)
-  - Access to the RAG retriever (filtered to its domain)
-  - Access to the Knowledge Graph (filtered traversals)
-  - A structured output schema (Pydantic model)
-
-Model used: Gemini 2.0 Flash (for all domain agents)
+Base Agent — Shared logic for all Domain Agents.
 """
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.prompts import ChatPromptTemplate
+from ...models.chat import DomainAgentOutput
+from ...config.settings import settings
 
-# TODO: Implement base agent with common interface:
-#   - process(query, context, retrieved_chunks) -> AgentOutput
-#   - get_system_prompt() -> str
-#   - get_tools() -> list
+class BaseDomainAgent:
+    """Base class for all domain-specific IP agents."""
+    
+    def __init__(self, system_prompt: str):
+        self.llm = ChatVertexAI(
+            model_name="gemini-2.5-flash", 
+            project=settings.google_cloud_project,
+            location=settings.google_cloud_location,
+            temperature=0.1
+        )
+        self.structured_llm = self.llm.with_structured_output(DomainAgentOutput)
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", "Query: {query}\n\nRetrieved Legal Context:\n{context}")
+        ])
+        self.chain = self.prompt | self.structured_llm
+
+    def analyze(self, query: str, context: str) -> DomainAgentOutput:
+        """Runs the agent with the user's query and the retrieved RAG context."""
+        return self.chain.invoke({
+            "query": query,
+            "context": context
+        })

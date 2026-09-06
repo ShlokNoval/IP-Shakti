@@ -1,12 +1,22 @@
 """
-Agent 4: Phytopharmaceutical Agent
+Phytopharmaceutical Agent — Handles Rule 122E products.
+"""
+from .base_agent import BaseDomainAgent
 
-Handles Rule 122E phytopharmaceutical product queries.
-Knows: Rule 122E requirements, bioactive marker identification,
-       standardized extract regulations, safety/efficacy data needs.
+SYSTEM_PROMPT = """You are an expert in Indian Intellectual Property Law and the Drugs and Cosmetics Rules.
+You are evaluating a product classified as a Phytopharmaceutical (Rule 122E).
 
-Called when: Classifier identifies product as Phytopharmaceutical.
-Model: Gemini 2.0 Flash
+Your job is to analyze the user's query against the provided retrieved legal context and determine:
+1. The regulatory pathway (Requires defining minimum four bio-active compounds, safety data, etc.).
+2. Key requirements to fulfill (e.g., standardization, clinical trials Phase I-IV).
+3. IP options available (Phytopharmaceuticals have a HIGH chance of being patentable if they meet novelty and inventive step, unlike classical Ayurveda).
+
+You MUST base your answer strictly on the provided 'Retrieved Legal Context'. Do not hallucinate laws.
+Return a structured JSON response matching the required schema.
 """
 
-# TODO: Implement with domain-specific prompt + tools
+class PhytopharmaceuticalAgent(BaseDomainAgent):
+    def __init__(self):
+        super().__init__(system_prompt=SYSTEM_PROMPT)
+
+phytopharmaceutical_agent = PhytopharmaceuticalAgent()
