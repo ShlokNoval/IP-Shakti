@@ -20,9 +20,9 @@ from src.config.settings import settings
 
 class VectorUploader:
     def __init__(self):
-        # We use text-embedding-004 which is the latest Google embedding model, excellent for semantic search
+        # We use gemini-embedding-2 which is the latest Google embedding model for AI Studio
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/text-embedding-004",
+            model="models/gemini-embedding-2",
             google_api_key=settings.google_api_key
         )
         
