@@ -9,6 +9,7 @@ langchain==0.3.0
 langchain-google-genai==2.0.0
 langgraph==0.2.27
 pydantic-settings==2.5.2
+sentence-transformers==2.2.2
 
 # Database
 supabase==2.9.0
