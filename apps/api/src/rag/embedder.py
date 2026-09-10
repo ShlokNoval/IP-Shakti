@@ -40,35 +40,50 @@ class VectorUploader:
         return chunks
 
     def process_and_upload(self, chunks: List[Dict[str, Any]]):
-        """Generates embeddings and uploads to the database."""
+        """Generates embeddings in small batches to respect rate limits and uploads to the database."""
+        import time
+        
         print(f"Processing {len(chunks)} chunks for embedding...")
         
-        # Extract just the text content for the embedding model
-        texts = [chunk["content"] for chunk in chunks]
+        batch_size = 100 # Maximum batch size for Gemini API
+        records_to_insert = []
         
-        try:
-            # Generate embeddings in bulk
-            vectors = self.embeddings.embed_documents(texts)
+        for i in range(0, len(chunks), batch_size):
+            batch_chunks = chunks[i:i+batch_size]
+            texts = [chunk["content"] for chunk in batch_chunks]
             
-            # Prepare data for Supabase insertion
-            records_to_insert = []
-            for i, chunk in enumerate(chunks):
-                record = {
-                    "content": chunk["content"],
-                    "embedding": vectors[i],
-                    "metadata": chunk["metadata"] # The strict JSON schema lives here!
-                }
-                records_to_insert.append(record)
-                
-            print(f"Successfully generated {len(vectors)} embeddings.")
-            
-            # TODO: Uncomment to actually insert into Supabase once DB is ready
-            # response = self.supabase.table("legal_documents").insert(records_to_insert).execute()
-            # print(f"Uploaded to Supabase: {len(response.data)} records.")
-            print("Ready for Supabase upload (Database credentials needed).")
-            
-        except Exception as e:
-            print(f"Error during embedding/upload: {e}")
+            success = False
+            while not success:
+                try:
+                    vectors = self.embeddings.embed_documents(texts)
+                    
+                    for j, chunk in enumerate(batch_chunks):
+                        records_to_insert.append({
+                            "content": chunk["content"],
+                            "embedding": vectors[j],
+                            "metadata": chunk["metadata"]
+                        })
+                        
+                    print(f"Embedded batch {i//batch_size + 1}/{(len(chunks)//batch_size) + 1}")
+                    success = True
+                    
+                    # Sleep slightly to stay under the 100 requests per minute limit
+                    time.sleep(1.0)
+                    
+                except Exception as e:
+                    if "429" in str(e) or "quota" in str(e).lower():
+                        print(f"Rate limit (429) hit. Sleeping for 60 seconds before retrying...")
+                        time.sleep(60)
+                    else:
+                        print(f"Fatal error during embedding: {e}")
+                        raise e
+
+        print(f"Successfully generated {len(records_to_insert)} embeddings.")
+        
+        # TODO: Uncomment to actually insert into Supabase once DB is ready
+        # response = self.supabase.table("legal_documents").insert(records_to_insert).execute()
+        # print(f"Uploaded to Supabase: {len(response.data)} records.")
+        print("Ready for Supabase upload (Database credentials needed).")
 
 if __name__ == "__main__":
     project_root = Path(__file__).parent.parent.parent.parent.parent
