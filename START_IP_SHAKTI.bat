@@ -15,7 +15,7 @@ cd /d "%~dp0"
 :: ──────────────────────────────────────────────────────
 :: 1. Pre-flight checks
 :: ──────────────────────────────────────────────────────
-echo [1/5] Running pre-flight checks...
+echo [1/4] Running pre-flight checks...
 
 :: Check Python
 where python >nul 2>&1
@@ -37,7 +37,6 @@ if %ERRORLEVEL% neq 0 (
 if not exist ".env" (
     echo [ERROR] .env file not found!
     echo         Copy .env.example to .env and fill in your API keys.
-    echo         At minimum, set GOOGLE_API_KEY=AIza...
     pause
     exit /b 1
 )
@@ -48,48 +47,40 @@ echo         .env    : OK
 echo.
 
 :: ──────────────────────────────────────────────────────
-:: 2. Install Python dependencies (if needed)
+:: 2. Install Node dependencies only if missing
 :: ──────────────────────────────────────────────────────
-echo [2/5] Checking Python dependencies...
-pip install -r apps\api\requirements.txt -q 2>nul
-echo         Dependencies ready.
-echo.
-
-:: ──────────────────────────────────────────────────────
-:: 3. Install Node dependencies (if needed)
-:: ──────────────────────────────────────────────────────
-echo [3/5] Checking Node.js dependencies...
+echo [2/4] Checking Node.js dependencies...
 if not exist "apps\web\node_modules" (
     echo         Installing npm packages (first run only)...
     cd apps\web
     call npm install --silent
     cd ..\..
 ) else (
-    echo         node_modules found, skipping install.
+    echo         node_modules found, skipping.
 )
 echo.
 
 :: ──────────────────────────────────────────────────────
-:: 4. Start Backend (FastAPI) in a new terminal window
+:: 3. Start Backend (FastAPI) in a new terminal window
 :: ──────────────────────────────────────────────────────
-echo [4/5] Starting FastAPI backend on http://localhost:8000 ...
-start "IP-SHAKTI Backend" cmd /k "cd /d %~dp0 && title IP-SHAKTI Backend (FastAPI) && color 0B && echo. && echo  Starting IP-SHAKTI Backend... && echo  API Docs: http://localhost:8000/docs && echo. && python -m uvicorn apps.api.src.main:app --reload --host 0.0.0.0 --port 8000"
+echo [3/4] Starting FastAPI backend on http://localhost:8000 ...
+start "IP-SHAKTI Backend" cmd /k "cd /d %~dp0 && title IP-SHAKTI Backend && color 0B && echo. && echo  Starting IP-SHAKTI Backend... && echo  API Docs: http://localhost:8000/docs && echo. && python -m uvicorn apps.api.src.main:app --reload --host 0.0.0.0 --port 8000"
 echo         Backend starting in new window...
 echo.
 
-:: Give backend a moment to boot before frontend tries to connect
-timeout /t 3 /nobreak >nul
+:: Give backend a moment to boot
+timeout /t 4 /nobreak >nul
 
 :: ──────────────────────────────────────────────────────
-:: 5. Start Frontend (Next.js) in a new terminal window
+:: 4. Start Frontend (Next.js) in a new terminal window
 :: ──────────────────────────────────────────────────────
-echo [5/5] Starting Next.js frontend on http://localhost:3000 ...
-start "IP-SHAKTI Frontend" cmd /k "cd /d %~dp0\apps\web && title IP-SHAKTI Frontend (Next.js) && color 0D && echo. && echo  Starting IP-SHAKTI Frontend... && echo. && npm run dev"
+echo [4/4] Starting Next.js frontend on http://localhost:3000 ...
+start "IP-SHAKTI Frontend" cmd /k "cd /d %~dp0\apps\web && title IP-SHAKTI Frontend && color 0D && echo. && echo  Starting IP-SHAKTI Frontend... && echo. && npm run dev"
 echo         Frontend starting in new window...
 echo.
 
 :: ──────────────────────────────────────────────────────
-:: 6. Wait and open browser
+:: Open browser and wait
 :: ──────────────────────────────────────────────────────
 echo  ======================================================
 echo   All services launching! Opening browser in 5 seconds...
@@ -98,18 +89,15 @@ echo.
 echo   Backend  : http://localhost:8000  (API Docs: /docs)
 echo   Frontend : http://localhost:3000
 echo.
-echo   Close this window to stop all services.
+echo   Press any key in THIS window to STOP all services.
 echo.
 
 timeout /t 5 /nobreak >nul
 start "" "http://localhost:3000"
 
-echo  IP-SHAKTI is running. Press any key to STOP all services.
 pause >nul
 
-:: ──────────────────────────────────────────────────────
-:: Cleanup: Kill both servers when user presses a key
-:: ──────────────────────────────────────────────────────
+:: Cleanup
 echo.
 echo  Shutting down IP-SHAKTI...
 taskkill /fi "WINDOWTITLE eq IP-SHAKTI Backend*" /f >nul 2>&1
