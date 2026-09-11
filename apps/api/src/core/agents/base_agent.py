@@ -3,8 +3,8 @@ Base Agent — Shared logic for all Domain Agents.
 """
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from ...models.chat import DomainAgentOutput
-from ...config.settings import settings
+from src.models.chat import DomainAgentOutput
+from src.config.settings import settings
 
 class BaseDomainAgent:
     """Base class for all domain-specific IP agents."""

@@ -3,8 +3,8 @@ ABS Compliance Agent — Checks for Access and Benefit Sharing obligations.
 """
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from ...models.chat import EngineOutput
-from ...config.settings import settings
+from src.models.chat import EngineOutput
+from src.config.settings import settings
 
 class ABSComplianceEngine:
     def __init__(self):

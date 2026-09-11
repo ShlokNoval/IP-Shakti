@@ -64,7 +64,7 @@ echo.
 :: 3. Start Backend (FastAPI) in a new terminal window
 :: ──────────────────────────────────────────────────────
 echo [3/4] Starting FastAPI backend on http://localhost:8000 ...
-start "IP-SHAKTI Backend" cmd /k "cd /d %~dp0 && title IP-SHAKTI Backend && color 0B && echo. && echo  Starting IP-SHAKTI Backend... && echo  API Docs: http://localhost:8000/docs && echo. && python -m uvicorn apps.api.src.main:app --reload --host 0.0.0.0 --port 8000"
+start "IP-SHAKTI Backend" cmd /k "cd /d %~dp0\apps\api && title IP-SHAKTI Backend && color 0B && echo. && echo  Starting IP-SHAKTI Backend... && echo  API Docs: http://localhost:8000/docs && echo. && python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000"
 echo         Backend starting in new window...
 echo.
 

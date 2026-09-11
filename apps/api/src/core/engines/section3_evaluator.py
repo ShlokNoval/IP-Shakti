@@ -3,8 +3,8 @@ Section 3 Evaluator — Checks against Indian Patents Act Section 3 exclusions.
 """
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from ...models.chat import EngineOutput
-from ...config.settings import settings
+from src.models.chat import EngineOutput
+from src.config.settings import settings
 
 class Section3Evaluator:
     def __init__(self):

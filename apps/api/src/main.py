@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 
-from .api.routes import chat
+from src.api.routes import chat
 
 @app.get("/api/v1/health")
 async def health_check():

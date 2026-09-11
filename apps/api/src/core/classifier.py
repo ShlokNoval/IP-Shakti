@@ -7,8 +7,8 @@ into one of 6 regulatory categories. Returns category + confidence + reasoning.
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
-from ...models.chat import ClassifierOutput
-from ...config.settings import settings
+from src.models.chat import ClassifierOutput
+from src.config.settings import settings
 
 class ClassifierAgent:
     def __init__(self):

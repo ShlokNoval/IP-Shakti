@@ -2,8 +2,8 @@
 Chat API Route — Main endpoint for user queries.
 """
 from fastapi import APIRouter, HTTPException
-from ...models.chat import ChatRequest, FinalResponse
-from ...core.orchestrator import orchestrator
+from src.models.chat import ChatRequest, FinalResponse
+from src.core.orchestrator import orchestrator
 
 router = APIRouter()
 

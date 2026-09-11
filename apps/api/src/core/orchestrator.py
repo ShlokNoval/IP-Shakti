@@ -4,9 +4,9 @@ LangGraph Orchestrator — The brain of IP-SHAKTI.
 
 from typing import TypedDict, List, Dict, Any, Optional
 from langgraph.graph import StateGraph, END
-from ...models.chat import ClassifierOutput, FinalResponse, SourceCitation, ComplianceAlert, DomainAgentOutput, EngineOutput
+from src.models.chat import ClassifierOutput, FinalResponse, SourceCitation, ComplianceAlert, DomainAgentOutput, EngineOutput
 from .classifier import classifier_agent
-from ..rag.retriever import hybrid_retriever
+from src.rag.retriever import hybrid_retriever
 
 # Import all agents and engines
 from .agents.ayurvedic_medicine_agent import ayurvedic_medicine_agent
