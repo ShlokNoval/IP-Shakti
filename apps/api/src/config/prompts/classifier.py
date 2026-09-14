@@ -1,7 +1,7 @@
 """
 Classifier Prompt Template
 
-Few-shot prompt for Gemini Flash-Lite to classify Ayurvedic products
+Few-shot prompt for Groq to classify Ayurvedic products
 into 6 regulatory categories with confidence scoring.
 """
 

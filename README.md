@@ -29,7 +29,7 @@ uvicorn src.main:app --reload
 
 ### Environment Variables
 Copy `.env.example` to `.env` and fill in:
-- `GOOGLE_API_KEY` — Gemini API key (free tier)
+- `GROQ_API_KEY` — Groq API key
 - `SUPABASE_URL` + `SUPABASE_ANON_KEY`
 - `NEO4J_URI` + `NEO4J_USER` + `NEO4J_PASSWORD`
 - `BHASHINI_API_KEY` + `BHASHINI_USER_ID`
@@ -54,7 +54,7 @@ User Query → Intake Gate → Normalizer → Classifier → Orchestrator
 |:------|:-----------|
 | Frontend | Next.js 15, TypeScript, CSS Modules |
 | Backend | Python 3.12, FastAPI, LangChain, LangGraph |
-| AI/ML | Gemini Flash-Lite, Gemini 2.0 Flash, text-embedding-004 |
+| AI/ML | Groq (configurable model), local sentence-transformer embeddings |
 | Database | Supabase (PostgreSQL + pgvector) |
 | Knowledge Graph | Neo4j AuraDB |
 | Translation | Bhashini ULCA API |

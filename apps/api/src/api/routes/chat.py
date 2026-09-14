@@ -1,6 +1,7 @@
 """
 Chat API Route — Main endpoint for user queries.
 """
+import traceback
 from fastapi import APIRouter, HTTPException
 from src.models.chat import ChatRequest, FinalResponse
 from src.core.orchestrator import orchestrator
@@ -17,11 +18,12 @@ async def chat_endpoint(request: ChatRequest):
             "language": request.language,
             "classification": None,
             "retrieved_context": [],
+            "domain_output": None,
+            "engine_outputs": [],
             "final_response": None
         }
         
         # Invoke the LangGraph workflow
-        # In a real production app, this would use .astream() for streaming
         final_state = orchestrator.invoke(initial_state)
         
         if not final_state.get("final_response"):
@@ -30,4 +32,5 @@ async def chat_endpoint(request: ChatRequest):
         return final_state["final_response"]
         
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))

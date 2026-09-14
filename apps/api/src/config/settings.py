@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     """Central configuration for all external services."""
     model_config = SettingsConfigDict(env_file=str(_env_file), env_file_encoding='utf-8', extra='ignore')
 
-    # Google GenAI (Free Tier)
-    google_api_key: str = ""
+    # Groq
+    groq_api_key: str = ""
+    groq_model: str = "openai/gpt-oss-20b"
 
     # Supabase
     supabase_url: str = ""

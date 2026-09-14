@@ -1,34 +1,36 @@
 """
-ABS Compliance Agent — Checks for Access and Benefit Sharing obligations.
+ABS (Access and Benefit Sharing) Compliance Engine
+
+Evaluates whether the biological resources used trigger the 
+Biological Diversity Act, 2002 requirements (e.g. NBA approval).
 """
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from src.models.chat import EngineOutput
 from src.config.settings import settings
+from langchain.output_parsers import PydanticOutputParser
 
 class ABSComplianceEngine:
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash", 
-            google_api_key=settings.google_api_key,
-            temperature=0.1
+        self.llm = ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+            temperature=0.0
         )
         self.structured_llm = self.llm.with_structured_output(EngineOutput)
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are a compliance officer for the National Biodiversity Authority (NBA).
-Your job is to check if the product uses Indian biological resources and triggers Access and Benefit Sharing (ABS) obligations under the Biological Diversity Act, 2002.
-Evaluate for:
-- Prior Informed Consent (PIC) requirements.
-- Mutually Agreed Terms (MAT) requirements.
-- Exemptions (e.g., normally traded commodities).
-
-Return your engine name as "ABS Compliance Engine" and provide specific checks.
-"""),
+            ("system", """You are an ABS Compliance Engine for Indian IP Law.
+Evaluate the user's formulation to determine if it uses Indian biological resources.
+If it does, flag that National Biodiversity Authority (NBA) approval and Access and Benefit Sharing (ABS) may be required under the Biological Diversity Act, 2002.
+If the user mentions 'value added products' or 'highly processed extracts', evaluate if they fall under the exemption.
+Return a list of compliance checks with STATUS (CLEAR, REVIEW, FAIL) and reason. Return only valid JSON."""),
             ("human", "Query: {query}\n\nContext:\n{context}")
         ])
+        
         self.chain = self.prompt | self.structured_llm
 
     def evaluate(self, query: str, context: str) -> EngineOutput:
         return self.chain.invoke({"query": query, "context": context})
 
-abs_compliance = ABSComplianceEngine()
+# Singleton instance
+abs_compliance_engine = ABSComplianceEngine()

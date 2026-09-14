@@ -1,25 +1,23 @@
 """
 Agent 1: IP Type Classifier
 
-Uses Gemini Flash-Lite with few-shot prompting to classify an Ayurvedic product
+Uses Groq with few-shot prompting to classify an Ayurvedic product
 into one of 6 regulatory categories. Returns category + confidence + reasoning.
 """
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from src.models.chat import ClassifierOutput
 from src.config.settings import settings
+from langchain.output_parsers import PydanticOutputParser
 
 class ClassifierAgent:
     def __init__(self):
-        # We use gemini-2.5-flash since gemini-2.0-flash-lite might not be available everywhere
-        # For SIH we assume a fast flash model. 
-        self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash", 
-            google_api_key=settings.google_api_key,
+        self.llm = ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
             temperature=0.0
         )
-        # Force the output to match our Pydantic schema
         self.structured_llm = self.llm.with_structured_output(ClassifierOutput)
 
         self.prompt = ChatPromptTemplate.from_messages([
@@ -33,14 +31,14 @@ Your job is to read a product description and classify it into exactly one of th
 - COSMETIC: For applying to the human body for cleansing/beautifying (Chapter III-A).
 - UNCLEAR: If the description is too vague to classify.
 
-Give a confidence score (0.0 to 1.0) and a brief 1-sentence reasoning. Be conservative. If you are not sure, give a lower confidence score."""),
+Give a confidence score (0.0 to 1.0) and a brief 1-sentence reasoning. Be conservative. If you are not sure, give a lower confidence score. Return only valid JSON."""),
             ("human", "Classify this product description: {query}")
         ])
 
+        self.chain = self.prompt | self.structured_llm
+
     def classify(self, query: str) -> ClassifierOutput:
-        chain = self.prompt | self.structured_llm
-        result = chain.invoke({"query": query})
-        return result
+        return self.chain.invoke({"query": query})
 
 # Singleton instance
 classifier_agent = ClassifierAgent()
