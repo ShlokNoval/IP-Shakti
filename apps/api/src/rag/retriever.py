@@ -40,10 +40,22 @@ class HybridRetriever:
         return embedding.cpu().numpy()[0]
 
     def _load_embeddings(self):
-        """Load the pre-computed embeddings from the JSONL file."""
-        project_root = Path(__file__).parent.parent.parent.parent.parent
-        embeddings_path = project_root / "apps" / "api" / "data" / "processed" / "embedded_chunks.jsonl"
+        """Load the pre-computed embeddings using fast binary cache or JSONL fallback."""
+        import pickle
+        api_dir = Path(__file__).resolve().parent.parent.parent
+        processed_dir = api_dir / "data" / "processed"
+        embeddings_path = processed_dir / "embedded_chunks.jsonl"
+        cache_vec_path = processed_dir / "embeddings_cache.npy"
+        cache_chunks_path = processed_dir / "chunks_cache.pkl"
         
+        if cache_vec_path.exists() and cache_chunks_path.exists():
+            print("Loading embedded corpus from fast binary cache...")
+            self._embeddings = np.load(str(cache_vec_path))
+            with open(cache_chunks_path, "rb") as f:
+                self._chunks = pickle.load(f)
+            print(f"Loaded {len(self._chunks)} chunks in milliseconds.")
+            return
+
         if not embeddings_path.exists():
             print(f"WARNING: {embeddings_path} not found. Retriever will return empty results.")
             print("Run embedder.py first to generate embeddings.")
@@ -51,7 +63,7 @@ class HybridRetriever:
             self._embeddings = np.array([])
             return
         
-        print("Loading embedded legal corpus into memory...")
+        print("Loading embedded legal corpus from JSONL and building fast cache...")
         self._chunks = []
         vectors = []
         
@@ -66,7 +78,18 @@ class HybridRetriever:
                     vectors.append(record["embedding"])
         
         self._embeddings = np.array(vectors, dtype=np.float32)
+        
+        # Save cache for instant future startups
+        try:
+            np.save(str(cache_vec_path), self._embeddings)
+            with open(cache_chunks_path, "wb") as f:
+                pickle.dump(self._chunks, f, protocol=pickle.HIGHEST_PROTOCOL)
+            print(f"Created fast cache: {cache_vec_path.name} & {cache_chunks_path.name}")
+        except Exception as e:
+            print(f"Cache save warning: {e}")
+            
         print(f"Loaded {len(self._chunks)} embedded chunks.")
+
 
     def retrieve(self, query: str, jurisdiction: str = "India", top_k: int = 10) -> List[Dict[str, Any]]:
         """

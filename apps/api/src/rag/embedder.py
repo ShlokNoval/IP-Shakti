@@ -89,9 +89,9 @@ class VectorUploader:
         print(f"Saved {len(all_vectors)} embedded records to {output_path}")
 
 if __name__ == "__main__":
-    project_root = Path(__file__).parent.parent.parent.parent.parent
-    input_path = project_root / "apps" / "api" / "data" / "processed" / "chunks.jsonl"
-    output_path = project_root / "apps" / "api" / "data" / "processed" / "embedded_chunks.jsonl"
+    api_dir = Path(__file__).resolve().parent.parent.parent
+    input_path = api_dir / "data" / "processed" / "chunks.jsonl"
+    output_path = api_dir / "data" / "processed" / "embedded_chunks.jsonl"
     
     if not input_path.exists():
         print(f"Error: {input_path} not found. Run chunker.py first.")
@@ -99,3 +99,4 @@ if __name__ == "__main__":
         uploader = VectorUploader()
         chunks = uploader.load_chunks(str(input_path))
         uploader.process_and_upload(chunks, str(output_path))
+

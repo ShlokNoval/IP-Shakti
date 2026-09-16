@@ -37,9 +37,10 @@ build/
 .DS_Store
 Thumbs.db
 
-# Corpus data (too large for git)
+# Corpus data
 apps/api/data/corpus/
-apps/api/data/processed/
+apps/api/data/processed/*.jsonl
+
 
 # Logs
 *.log

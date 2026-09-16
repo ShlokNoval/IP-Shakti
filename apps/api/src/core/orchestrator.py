@@ -66,7 +66,7 @@ def run_agents_node(state: GraphState) -> Dict[str, Any]:
     abs_out = None
     prior_art_out = None
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = {}
         if domain_agent_runner:
             futures["domain"] = executor.submit(domain_agent_runner, state["query"], context_str)
@@ -104,7 +104,7 @@ def run_agents_node(state: GraphState) -> Dict[str, Any]:
 
 def synthesize_node(state: GraphState) -> Dict[str, Any]:
     category = state["classification"].category if state["classification"] else "UNCLEAR"
-    conf = state["classification"].confidence if state["classification"] else 0.0
+    base_conf = state["classification"].confidence if state["classification"] else 0.5
     
     # Aggregate compliance alerts
     alerts = []
@@ -113,11 +113,47 @@ def synthesize_node(state: GraphState) -> Dict[str, Any]:
         
     # Aggregate sources
     sources = []
+    sections = []
+    
     if state["domain_output"]:
         sources.extend(state["domain_output"].citations)
-        guidance = state["domain_output"].regulatory_pathway + "\n\n**IP Options:**\n" + "\n".join(["- " + opt for opt in state["domain_output"].ip_options])
+        
+        # 1. Regulatory Pathway
+        if state["domain_output"].regulatory_pathway:
+            sections.append(f"### 📋 Regulatory Pathway\n{state['domain_output'].regulatory_pathway}")
+            
+        # 2. Key Requirements
+        if state["domain_output"].key_requirements:
+            req_list = "\n".join([f"- {req}" for req in state["domain_output"].key_requirements])
+            sections.append(f"### ⚙️ Key Regulatory Requirements\n{req_list}")
+            
+        # 3. IP Options
+        if state["domain_output"].ip_options:
+            ip_list = "\n".join([f"- {opt}" for opt in state["domain_output"].ip_options])
+            sections.append(f"### 💡 Intellectual Property Protection Options\n{ip_list}")
     else:
-        guidance = "Classification unclear. Escalation to human expert recommended."
+        sections.append("### 📋 Regulatory Assessment\nClassification required further clarification or manual verification. Escalation to an Ayush/IP legal expert is recommended.")
+
+    # 4. Synthesized Compliance Analysis
+    if alerts:
+        comp_summary = []
+        for alert in alerts:
+            status_emoji = "✅" if alert.status == "CLEAR" else ("⚠️" if alert.status == "REVIEW" else "❌")
+            comp_summary.append(f"- **{alert.check_name}** [{status_emoji} `{alert.status}`]: {alert.reason}")
+        sections.append(f"### ⚖️ Statutory & Compliance Evaluation\n" + "\n".join(comp_summary))
+
+    guidance = "\n\n".join(sections)
+
+    # Weighted confidence score
+    confidence_penalty = 0.0
+    for alert in alerts:
+        if alert.status == "FAIL":
+            confidence_penalty += 0.10
+        elif alert.status == "REVIEW":
+            confidence_penalty += 0.03
+            
+    citation_bonus = 0.05 if len(sources) > 0 else 0.0
+    overall_conf = round(max(0.30, min(0.98, base_conf - confidence_penalty + citation_bonus)), 2)
 
     final_resp = FinalResponse(
         classification=category,
@@ -125,9 +161,10 @@ def synthesize_node(state: GraphState) -> Dict[str, Any]:
         guidance_text=guidance,
         compliance_alerts=alerts,
         sources=sources,
-        overall_confidence=conf
+        overall_confidence=overall_conf
     )
     return {"final_response": final_resp}
+
 
 # Build the Graph
 workflow = StateGraph(GraphState)

@@ -16,66 +16,12 @@ export default function Home() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleQuickAction = (actionText: string) => {
-    setInput(actionText);
-    // Automatically submit after a short delay for better UX
-    setTimeout(() => {
-      const form = document.getElementById('chat-form') as HTMLFormElement;
-      if (form) form.requestSubmit();
-    }, 100);
-  };
+  const executeUserQuery = async (userQuery: string) => {
+    if (!userQuery.trim() || isLoading) return;
 
-  const loadMockHistory = (type: 'ashwagandha' | 'triphala') => {
-    setActiveSession(type);
-    if (type === 'ashwagandha') {
-      setMessages([
-        { id: '1', role: 'user', content: 'Check patentability of Ashwagandha extract for sleep aid in India.' },
-        { 
-          id: '2', 
-          role: 'assistant', 
-          content: 'Based on the Traditional Knowledge Digital Library (TKDL) and Indian Patent Act Section 3(p), the use of Ashwagandha (*Withania somnifera*) for sleep regulation is well-documented in classical Ayurvedic texts.\n\n### Novelty Assessment\nExtracting it for a known traditional use does not constitute patentable subject matter under Section 3(p) unless a synergistic effect with other ingredients is proven.\n\n### Recommendations\n1. Focus on unique extraction processes or novel synergistic formulations.\n2. Consider protecting the formulation under trade secrets if patentability criteria are not met.',
-          classification: 'Patentability Assessment',
-          alerts: [
-            { check_name: 'Section 3(p) Compliance', status: 'FAIL', reason: 'Traditional knowledge is not patentable.' },
-            { check_name: 'Novelty', status: 'REVIEW', reason: 'Requires proof of synergistic effect.' }
-          ],
-          sources: [
-            { name: 'TKDL', section: 'Formulation TK-1234' },
-            { name: 'Charaka Samhita', section: 'Sutra Sthana, Ch. 4' }
-          ]
-        }
-      ]);
-    } else {
-      setMessages([
-        { id: '1', role: 'user', content: 'Is Triphala safe for long-term daily use according to Ayush guidelines?' },
-        { 
-          id: '2', 
-          role: 'assistant', 
-          content: 'Triphala (a combination of Amalaki, Bibhitaki, and Haritaki) is classified as a *Rasayana* (rejuvenative) in Ayurveda.\n\nAccording to Ayush Ministry guidelines and classical texts, it is generally safe for long-term daily use in appropriate dosages. However, as it has mild laxative properties, continuous use without breaks may cause dependency in some individuals.',
-          classification: 'Safety & Regulatory Check',
-          alerts: [
-            { check_name: 'Ayush Safety Guidelines', status: 'CLEAR', reason: 'Approved for general use as Rasayana.' }
-          ],
-          sources: [
-            { name: 'Ayush Pharmacopoeia', section: 'Part 1, Vol 1' }
-          ]
-        }
-      ]);
-    }
-  };
-
-  const startNewSession = () => {
-    setActiveSession('new');
-    clearMessages();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
+    const queryText = userQuery.trim();
     setInput('');
-    addMessage({ id: Date.now().toString(), role: 'user', content: userMessage });
+    addMessage({ id: Date.now().toString(), role: 'user', content: queryText });
     setLoading(true);
 
     try {
@@ -84,7 +30,7 @@ export default function Home() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          query: userMessage,
+          query: queryText,
           jurisdiction: 'india',
           language: 'en'
         }),
@@ -116,6 +62,26 @@ export default function Home() {
     }
   };
 
+  const handleQuickAction = (actionText: string) => {
+    executeUserQuery(actionText);
+  };
+
+  const loadConsultation = (query: string, label: string) => {
+    setActiveSession(label);
+    executeUserQuery(query);
+  };
+
+  const startNewSession = () => {
+    setActiveSession('new');
+    clearMessages();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeUserQuery(input);
+  };
+
+
   return (
     <div className="dashboard-layout">
       {/* Sidebar Navigation */}
@@ -140,18 +106,19 @@ export default function Home() {
             <h3 className="sidebar-section-title">Recent Consultations</h3>
             <div 
               className={`sidebar-item ${activeSession === 'ashwagandha' ? 'active' : ''}`}
-              onClick={() => loadMockHistory('ashwagandha')}
+              onClick={() => loadConsultation('Check patentability and Section 3(p) criteria of Ashwagandha extract in India.', 'ashwagandha')}
             >
               <Clock size={16} />
               <span style={{ fontSize: '0.9rem' }}>Ashwagandha Extract</span>
             </div>
             <div 
               className={`sidebar-item ${activeSession === 'triphala' ? 'active' : ''}`}
-              onClick={() => loadMockHistory('triphala')}
+              onClick={() => loadConsultation('Verify Ayush Ministry safety guidelines for long term daily use of Triphala formulation.', 'triphala')}
             >
               <Search size={16} />
               <span style={{ fontSize: '0.9rem' }}>Triphala Safety Check</span>
             </div>
+
           </div>
         </div>
       </aside>

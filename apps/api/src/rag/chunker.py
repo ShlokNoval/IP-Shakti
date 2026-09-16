@@ -105,10 +105,30 @@ class DocumentChunker:
 
 if __name__ == "__main__":
     # Example usage when run directly
-    project_root = Path(__file__).parent.parent.parent.parent.parent
-    sources_dir = project_root / "IP Shakti Sources"
-    output_path = project_root / "apps" / "api" / "data" / "processed" / "chunks.jsonl"
+    api_dir = Path(__file__).resolve().parent.parent.parent
+    project_root = api_dir.parent.parent
+    
+    # Check potential source paths
+    candidates = [
+        project_root / "Laws_Rules_Data_Sources" / "IP Shakti Sources",
+        project_root / "IP-Shakti" / "Laws_Rules_Data_Sources" / "IP Shakti Sources",
+        project_root / "IP Shakti Sources",
+        api_dir.parent / "Laws_Rules_Data_Sources" / "IP Shakti Sources",
+    ]
+    
+    sources_dir = None
+    for candidate in candidates:
+        if candidate.exists():
+            sources_dir = candidate
+            break
+            
+    if not sources_dir:
+        raise FileNotFoundError(f"Could not find 'IP Shakti Sources' directory in any candidate path: {candidates}")
+        
+    print(f"Using sources directory: {sources_dir}")
+    output_path = api_dir / "data" / "processed" / "chunks.jsonl"
     
     chunker = DocumentChunker(str(sources_dir))
     chunks = chunker.process_directory()
     chunker.save_to_jsonl(chunks, str(output_path))
+
