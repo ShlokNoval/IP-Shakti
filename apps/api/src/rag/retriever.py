@@ -40,7 +40,7 @@ class HybridRetriever:
         return embedding.cpu().numpy()[0]
 
     def _load_embeddings(self):
-        """Load the pre-computed embeddings using fast binary cache or JSONL fallback."""
+        """Load the pre-computed embeddings using fast binary cache or JSONL fallback and build partitioned indices."""
         import pickle
         api_dir = Path(__file__).resolve().parent.parent.parent
         processed_dir = api_dir / "data" / "processed"
@@ -54,89 +54,92 @@ class HybridRetriever:
             with open(cache_chunks_path, "rb") as f:
                 self._chunks = pickle.load(f)
             print(f"Loaded {len(self._chunks)} chunks in milliseconds.")
-            return
-
-        if not embeddings_path.exists():
-            print(f"WARNING: {embeddings_path} not found. Retriever will return empty results.")
-            print("Run embedder.py first to generate embeddings.")
+        elif embeddings_path.exists():
+            print("Loading embedded legal corpus from JSONL and building fast cache...")
+            self._chunks = []
+            vectors = []
+            
+            with open(embeddings_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if line.strip():
+                        record = json.loads(line)
+                        self._chunks.append({
+                            "content": record["content"],
+                            "metadata": record["metadata"]
+                        })
+                        vectors.append(record["embedding"])
+            
+            self._embeddings = np.array(vectors, dtype=np.float32)
+            
+            # Save cache for instant future startups
+            try:
+                np.save(str(cache_vec_path), self._embeddings)
+                with open(cache_chunks_path, "wb") as f:
+                    pickle.dump(self._chunks, f, protocol=pickle.HIGHEST_PROTOCOL)
+                print(f"Created fast cache: {cache_vec_path.name} & {cache_chunks_path.name}")
+            except Exception as e:
+                print(f"Cache save warning: {e}")
+        else:
+            print(f"WARNING: No embeddings found. Retriever will return empty results.")
             self._chunks = []
             self._embeddings = np.array([])
             return
-        
-        print("Loading embedded legal corpus from JSONL and building fast cache...")
-        self._chunks = []
-        vectors = []
-        
-        with open(embeddings_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                if line.strip():
-                    record = json.loads(line)
-                    self._chunks.append({
-                        "content": record["content"],
-                        "metadata": record["metadata"]
-                    })
-                    vectors.append(record["embedding"])
-        
-        self._embeddings = np.array(vectors, dtype=np.float32)
-        
-        # Save cache for instant future startups
-        try:
-            np.save(str(cache_vec_path), self._embeddings)
-            with open(cache_chunks_path, "wb") as f:
-                pickle.dump(self._chunks, f, protocol=pickle.HIGHEST_PROTOCOL)
-            print(f"Created fast cache: {cache_vec_path.name} & {cache_chunks_path.name}")
-        except Exception as e:
-            print(f"Cache save warning: {e}")
-            
-        print(f"Loaded {len(self._chunks)} embedded chunks.")
+
+        # Pre-partition indices and embedding slices for ultra-fast scoped retrieval
+        self._india_indices = [
+            i for i, c in enumerate(self._chunks) 
+            if c["metadata"].get("jurisdiction", "").lower() == "india"
+        ]
+        self._global_indices = [
+            i for i, c in enumerate(self._chunks) 
+            if c["metadata"].get("jurisdiction", "").lower() == "global"
+        ]
+
+        if len(self._india_indices) > 0:
+            self._india_embeddings = self._embeddings[self._india_indices]
+        else:
+            self._india_indices = list(range(len(self._chunks)))
+            self._india_embeddings = self._embeddings
+
+        if len(self._global_indices) > 0:
+            self._global_embeddings = self._embeddings[self._global_indices]
+        else:
+            self._global_indices = list(range(len(self._chunks)))
+            self._global_embeddings = self._embeddings
+
+        print(f"Partitioned indices ready: India ({len(self._india_indices)} chunks), Global ({len(self._global_indices)} chunks).")
 
 
     def retrieve(self, query: str, jurisdiction: str = "India", top_k: int = 10) -> List[Dict[str, Any]]:
         """
         Retrieve the top-k most relevant legal documents for a given query.
-        Uses cosine similarity between the query embedding and pre-computed doc embeddings.
-        Optionally filters by jurisdiction.
+        Uses pre-partitioned cosine similarity against the selected jurisdiction.
         """
         if len(self._chunks) == 0:
             return []
         
+        # Determine target partition
+        is_global = str(jurisdiction).lower() in ["global", "international", "pct", "wipo", "foreign"]
+        target_indices = self._global_indices if is_global else self._india_indices
+        target_embeddings = self._global_embeddings if is_global else self._india_embeddings
+        
         # Embed the query
         query_vec = self._embed_query(query)
         
-        # Cosine similarity (embeddings are already normalized)
-        scores = self._embeddings @ query_vec
+        # Fast scoped cosine similarity
+        scores = target_embeddings @ query_vec
         
-        # Get top-k indices
-        top_indices = np.argsort(scores)[::-1][:top_k * 3]  # Fetch extra for filtering
+        # Top-k within the target jurisdiction partition
+        top_local_indices = np.argsort(scores)[::-1][:top_k]
         
         results = []
-        for idx in top_indices:
-            chunk = self._chunks[idx]
-            score = float(scores[idx])
-            
-            # Optional jurisdiction filter (soft match)
-            meta_jurisdiction = chunk["metadata"].get("jurisdiction", "").lower()
-            if jurisdiction and jurisdiction.lower() not in meta_jurisdiction and meta_jurisdiction != "unknown":
-                continue
-            
+        for local_idx in top_local_indices:
+            orig_idx = target_indices[local_idx]
             results.append({
-                "content": chunk["content"],
-                "metadata": chunk["metadata"],
-                "score": score
+                "content": self._chunks[orig_idx]["content"],
+                "metadata": self._chunks[orig_idx]["metadata"],
+                "score": float(scores[local_idx])
             })
-            
-            if len(results) >= top_k:
-                break
-        
-        # If jurisdiction filter was too strict, fall back to unfiltered top-k
-        if len(results) < 3:
-            results = []
-            for idx in np.argsort(scores)[::-1][:top_k]:
-                results.append({
-                    "content": self._chunks[idx]["content"],
-                    "metadata": self._chunks[idx]["metadata"],
-                    "score": float(scores[idx])
-                })
         
         return results
 

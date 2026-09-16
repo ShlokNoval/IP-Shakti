@@ -36,6 +36,17 @@ app.add_middleware(
 
 from src.api.routes import chat
 
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {
+        "status": "healthy",
+        "service": "IP-SHAKTI Regulatory & Patent Intelligence API",
+        "version": "0.1.0",
+        "docs": "/docs",
+        "health": "/api/v1/health"
+    }
+
 @app.get("/api/v1/health")
 async def health_check():
     """Health check endpoint."""
